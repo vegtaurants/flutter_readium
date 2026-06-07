@@ -204,8 +204,9 @@ class _ReadiumReaderWidgetState extends State<ReadiumReaderWidget> implements Re
                 await Future.delayed(const Duration(seconds: 1));
               } else {
                 final dx = event.position.dx;
-
-                if (dx < 70.0 || ((context.size?.width ?? 0) - dx) < 70.0) {
+                final w = context.size?.width ?? 0;
+                final isEdge = dx < 70.0 || (w - dx) < 70.0;
+                if (isEdge) {
                   // edge tap
                   _onInteraction();
                 } else {
