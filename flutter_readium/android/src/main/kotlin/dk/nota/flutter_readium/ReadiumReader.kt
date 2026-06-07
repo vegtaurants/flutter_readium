@@ -48,6 +48,9 @@ import org.readium.r2.shared.publication.LocatorCollection
 import org.readium.r2.shared.publication.Publication
 import org.readium.r2.shared.publication.html.cssSelector
 import org.readium.r2.shared.publication.services.search.SearchService
+import org.json.JSONArray
+import org.json.JSONObject
+import org.readium.r2.shared.publication.services.positions
 import org.readium.r2.shared.publication.services.search.search
 import org.readium.r2.shared.util.AbsoluteUrl
 import org.readium.r2.shared.util.DebugError
@@ -1204,6 +1207,18 @@ object ReadiumReader :
             results.add(collection)
         }
         return Try.success(results.toList())
+    }
+
+    suspend fun getPositionsJson(): String {
+        val pub =
+            currentPublication ?: throw Exception("Publication not opened cannot get positions")
+        val positions = pub.positions()
+        val json =
+            JSONObject().apply {
+                put("total", positions.size)
+                put("positions", JSONArray(positions.map { it.toJSON() }))
+            }
+        return json.toString().replace("\\/", "/")
     }
 
     /**

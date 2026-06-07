@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
+
+import 'package:flutter/services.dart';
 
 import 'package:collection/collection.dart';
 import 'package:flutter_readium_platform_interface/flutter_readium_platform_interface.dart';
@@ -192,6 +195,22 @@ class FlutterReadium {
   /// Searches for [searchKey] in the currently opened publication and returns a list of matching results.
   Future<List<TextSearchResult>> searchInPublication(String searchKey) async =>
       _platform.searchInPublication(searchKey);
+
+  /// Returns the list of all positions in the currently opened publication.
+  ///
+  /// Each position is a [Locator] whose `locations.totalProgression` expresses
+  /// its location as a fraction of the whole publication (0.0–1.0), suitable
+  /// for building a book-level progress indicator or seek control. Navigate to
+  /// a position with [goToLocator].
+  Future<PositionsList> getPositions() async {
+    const channel = MethodChannel('dk.nota.flutter_readium/main');
+    final str = await channel.invokeMethod<String>('getPositions');
+    if (str == null) {
+      return PositionsList(total: 0, positions: const []);
+    }
+    return PositionsList.fromJson(json.decode(str) as Map<String, dynamic>) ??
+        PositionsList(total: 0, positions: const []);
+  }
 
   ///////////////////////
   /// Private helpers ///

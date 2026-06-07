@@ -262,6 +262,23 @@ internal class PublicationMethodCallHandler : MethodChannel.MethodCallHandler {
                 return Try.success(textSearchResults.map { it.toJSON().toString() })
             }
 
+            "getPositions" -> {
+                ReadiumReader.currentPublication ?: return Try.failure(
+                    PublicationError.Unavailable(),
+                )
+                val positionsJson =
+                    try {
+                        ReadiumReader.getPositionsJson()
+                    } catch (e: Exception) {
+                        return Try.failure(
+                            PublicationError.Unknown(
+                                message = e.message ?: "Get positions failed",
+                            ),
+                        )
+                    }
+                return Try.success(positionsJson)
+            }
+
             "goToProgression" -> {
                 val duration = (arguments as? Double)?.takeIf { it in 0.0..1.0 }
 
