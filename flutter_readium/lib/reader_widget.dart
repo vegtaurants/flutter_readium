@@ -361,6 +361,7 @@ class _ReadiumReaderWidgetState extends State<ReadiumReaderWidget> implements Re
       },
       onTextSelected: widget.onTextSelected,
       onSelectionAction: widget.onSelectionAction,
+      onExternalLinkActivated: widget.onExternalLinkActivated,
       onDecorationInteraction: widget.onDecorationInteraction,
     );
 
