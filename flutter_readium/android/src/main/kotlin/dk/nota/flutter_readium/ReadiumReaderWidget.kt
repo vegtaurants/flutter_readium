@@ -209,6 +209,11 @@ class ReadiumReaderWidget(
         emitOnExternalLinkActivated(url)
     }
 
+    override fun onImageTapped(href: String) {
+        PluginLog.i(TAG, "::onImageTapped $href")
+        channel.onImageTapped(href)
+    }
+
     override fun onVisualCurrentLocationChanged(locator: Locator) {
         PluginLog.d(TAG, "::onVisualCurrentLocationChanged $locator")
     }

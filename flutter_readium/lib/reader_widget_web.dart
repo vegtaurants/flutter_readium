@@ -10,6 +10,7 @@ class ReadiumReaderWidget extends StatefulWidget {
     this.initialLocator,
     this.shouldShowControls,
     this.onExternalLinkActivated,
+    this.onImageTapped,
     this.goBackwardSemanticLabel = 'Go Backward',
     this.goForwardSemanticLabel = 'Go Forward',
     this.toggleShowControlsSemanticLabel = 'Toggle show controls',
@@ -27,6 +28,7 @@ class ReadiumReaderWidget extends StatefulWidget {
   final Locator? initialLocator;
   final ValueNotifier<bool>? shouldShowControls;
   final Function(String)? onExternalLinkActivated;
+  final Function(String)? onImageTapped;
   final String goBackwardSemanticLabel;
   final String goForwardSemanticLabel;
   final String toggleShowControlsSemanticLabel;

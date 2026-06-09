@@ -8,6 +8,7 @@ class ReadiumReaderWidget extends StatelessWidget {
     this.initialLocator,
     this.shouldShowControls,
     this.onExternalLinkActivated,
+    this.onImageTapped,
     this.onTextSelected,
     this.onSelectionAction,
     this.onDecorationInteraction,
@@ -25,6 +26,7 @@ class ReadiumReaderWidget extends StatelessWidget {
   final Locator? initialLocator;
   final ValueNotifier<bool>? shouldShowControls;
   final Function(String)? onExternalLinkActivated;
+  final Function(String)? onImageTapped;
   final ValueChanged<TextSelectionEvent>? onTextSelected;
   final ValueChanged<SelectionActionEvent>? onSelectionAction;
   final ValueChanged<DecorationInteractionEvent>? onDecorationInteraction;

@@ -26,6 +26,8 @@ import org.readium.r2.navigator.SelectableNavigator
 import org.readium.r2.navigator.epub.EpubNavigatorFragment
 import org.readium.r2.navigator.html.HtmlDecorationTemplates
 import org.readium.r2.navigator.util.DirectionalNavigationAdapter
+import org.readium.r2.navigator.input.InputListener
+import org.readium.r2.navigator.input.TapEvent
 import org.readium.r2.shared.ExperimentalReadiumApi
 import org.readium.r2.shared.InternalReadiumApi
 import org.readium.r2.shared.publication.Layout
@@ -61,6 +63,8 @@ class EpubReaderFragment :
          * Called when an external link is activated.
          */
         fun onExternalLinkActivated(url: AbsoluteUrl)
+
+        fun onImageTapped(href: String)
     }
 
     var listener: Listener? = null
@@ -597,6 +601,19 @@ class EpubReaderFragment :
         (epubNavigator as OverflowableNavigator).apply {
             // This will automatically turn pages when tapping the screen edges or arrow keys.
             addInputListener(DirectionalNavigationAdapter(this))
+            addInputListener(object : InputListener {
+                override fun onTap(event: TapEvent): Boolean {
+                    lifecycleScope.launch {
+                        val raw = evaluateJavascript("window.__rdmConsumeImageTap()")
+                        if (raw != null && raw != "null") {
+                            val unquoted = raw.trim().removeSurrounding("\"")
+                            val href = unquoted.removePrefix("https://readium_package/")
+                            if (href.isNotBlank()) listener?.onImageTapped(href)
+                        }
+                    }
+                    return false
+                }
+            })
         }
 
         navigator = epubNavigator

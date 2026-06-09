@@ -24,6 +24,7 @@ class ReadiumReaderChannel extends MethodChannel {
     super.name, {
     required this.onPageChanged,
     this.onExternalLinkActivated,
+    this.onImageTapped,
     this.onTextSelected,
     this.onSelectionAction,
     this.onDecorationInteraction,
@@ -36,6 +37,9 @@ class ReadiumReaderChannel extends MethodChannel {
 
   /// Called when the reader activates a link that points outside the publication.
   void Function(String)? onExternalLinkActivated;
+
+  /// Called when the user taps an image in the reader. Argument is the publication-relative href.
+  void Function(String)? onImageTapped;
 
   /// Called when the user selects text in the reader.
   void Function(TextSelectionEvent)? onTextSelected;
@@ -126,6 +130,11 @@ class ReadiumReaderChannel extends MethodChannel {
           ReadiumLog.d('onExternalLinkActivated $link');
           onExternalLinkActivated?.call(link);
 
+          return null;
+        case 'onImageTapped':
+          final href = call.arguments as String;
+          ReadiumLog.d('onImageTapped $href');
+          onImageTapped?.call(href);
           return null;
         case 'onTextSelected':
           final args = call.arguments as String;

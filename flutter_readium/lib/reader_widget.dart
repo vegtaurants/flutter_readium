@@ -21,6 +21,7 @@ class ReadiumReaderWidget extends StatefulWidget {
     this.initialLocator,
     this.shouldShowControls,
     this.onExternalLinkActivated,
+    this.onImageTapped,
     this.onTextSelected,
     this.onSelectionAction,
     this.onDecorationInteraction,
@@ -50,6 +51,9 @@ class ReadiumReaderWidget extends StatefulWidget {
 
   /// Callback invoked when the reader activates an external (non-publication) link.
   final Function(String)? onExternalLinkActivated;
+
+  /// Callback invoked when the user taps an image in the reader. Argument is the publication-relative href.
+  final Function(String)? onImageTapped;
 
   /// Callback invoked when the user selects text in the reader.
   final ValueChanged<TextSelectionEvent>? onTextSelected;
@@ -362,6 +366,7 @@ class _ReadiumReaderWidgetState extends State<ReadiumReaderWidget> implements Re
       onTextSelected: widget.onTextSelected,
       onSelectionAction: widget.onSelectionAction,
       onExternalLinkActivated: widget.onExternalLinkActivated,
+      onImageTapped: widget.onImageTapped,
       onDecorationInteraction: widget.onDecorationInteraction,
     );
 

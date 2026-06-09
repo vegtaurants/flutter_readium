@@ -93,6 +93,8 @@ class EpubNavigator :
          */
         fun onExternalLinkActivated(url: AbsoluteUrl)
 
+        fun onImageTapped(href: String)
+
         /**
          * Called when the current locator has changed.
          */
@@ -332,6 +334,10 @@ class EpubNavigator :
 
     override fun onExternalLinkActivated(url: AbsoluteUrl) {
         visualListener.onExternalLinkActivated(url)
+    }
+
+    override fun onImageTapped(href: String) {
+        visualListener.onImageTapped(href)
     }
 
     override fun onCurrentLocatorChanges(locator: Locator) {

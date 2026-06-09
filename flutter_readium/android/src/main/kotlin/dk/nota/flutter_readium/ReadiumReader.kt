@@ -1321,6 +1321,10 @@ object ReadiumReader :
         currentReaderWidget?.onExternalLinkActivated(url)
     }
 
+    override fun onImageTapped(href: String) {
+        currentReaderWidget?.onImageTapped(href)
+    }
+
     override fun onVisualCurrentLocationChanged(locator: Locator) {
         currentReaderWidget?.onVisualCurrentLocationChanged(locator)
     }

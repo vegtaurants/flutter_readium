@@ -25,6 +25,8 @@ internal class ReadiumReaderChannel(
 
     fun onExternalLinkActivated(url: AbsoluteUrl) = launch { invokeMethod("onExternalLinkActivated", url.toString()) }
 
+    fun onImageTapped(href: String) = launch { invokeMethod("onImageTapped", href) }
+
     fun onTextSelected(locator: Locator, selectedText: String?) =
         launch {
             val json = JSONObject().apply {
