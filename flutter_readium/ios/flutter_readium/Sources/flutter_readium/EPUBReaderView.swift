@@ -7,7 +7,17 @@ import WebKit
 private var userScripts: [WKUserScript] = []
 private let jsonEncoder = JSONEncoder()
 
-public class EPUBReaderView: NSObject, FlutterPlatformView, ReadiumReaderView, EPUBNavigatorDelegate, VisualNavigatorDelegate, SelectableNavigatorDelegate {
+/// Weak proxy for WKScriptMessageHandler to avoid the retain cycle created by
+/// WKUserContentController.add(_:name:), which strongly retains its handler.
+final class WeakScriptMessageHandler: NSObject, WKScriptMessageHandler {
+  weak var delegate: WKScriptMessageHandler?
+  init(_ delegate: WKScriptMessageHandler) { self.delegate = delegate }
+  func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
+    delegate?.userContentController(controller, didReceive: message)
+  }
+}
+
+public class EPUBReaderView: NSObject, FlutterPlatformView, ReadiumReaderView, EPUBNavigatorDelegate, VisualNavigatorDelegate, SelectableNavigatorDelegate, WKScriptMessageHandler {
 
   private let channel: ReadiumReaderChannel
   private let containerView: EPUBContainerView
@@ -185,6 +195,12 @@ public class EPUBReaderView: NSObject, FlutterPlatformView, ReadiumReaderView, E
       userContentController.addUserScript(script)
     }
 
+    // Register the image-tap message handler (via weak proxy to avoid a retain cycle).
+    // The injected JS pushes the tapped image src to "imageTapped". Remove first to
+    // avoid a duplicate-name throw if this controller was already configured.
+    userContentController.removeScriptMessageHandler(forName: "imageTapped")
+    userContentController.add(WeakScriptMessageHandler(self), name: "imageTapped")
+
     /// Custom preferences added dynamically for each WebView, to make sure changes to preferences are respected.
     if let preferencesStylesheet = self.preferences?.toInjectableStyleSheet() {
       let source = """
@@ -258,6 +274,14 @@ public class EPUBReaderView: NSObject, FlutterPlatformView, ReadiumReaderView, E
     emitOnExternalLinkActivated(url: url)
   }
 
+  // WKScriptMessageHandler - receives the image src pushed from the injected JS
+  // detector (window.webkit.messageHandlers.imageTapped.postMessage). This bypasses
+  // the navigator UIKit tap pipeline, which is inert in the Flutter embedding.
+  public func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
+    guard message.name == "imageTapped", let src = message.body as? String, !src.isEmpty else { return }
+    Log.reader.info("imageTapped message RAW src: \(src)")
+    channel.onImageTapped(href: src)
+  }
   /// Called when the user taps on a link referring to a note.
   ///
   /// Return `true` to navigate to the note, or `false` if you intend to present the
