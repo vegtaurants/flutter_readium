@@ -363,6 +363,43 @@ public class FlutterReadiumPlugin: NSObject, FlutterPlugin, ReadiumShared.Warnin
           result(navigated)
         }
       }
+    case "getPositions":
+      Task.detached(priority: .high) {
+        guard let pub = self.currentPublication else {
+          await MainActor.run {
+            result(FlutterError.init(
+              code: "NoPublication",
+              message: "Publication not opened cannot get positions",
+              details: nil))
+          }
+          return
+        }
+        switch await pub.positions() {
+        case .success(let positions):
+          let positionsJson: [Any] = positions.compactMap { locator in
+            guard let str = try? locator.jsonString(),
+                  let data = str.data(using: .utf8),
+                  let obj = try? JSONSerialization.jsonObject(with: data) else {
+              return nil
+            }
+            return obj
+          }
+          let payload: [String: Any] = [
+            "total": positions.count,
+            "positions": positionsJson
+          ]
+          let jsonString: String
+          if let data = try? JSONSerialization.data(withJSONObject: payload),
+             let str = String(data: data, encoding: .utf8) {
+            jsonString = str
+          } else {
+            jsonString = "{\"total\":0,\"positions\":[]}"
+          }
+          await MainActor.run { result(jsonString) }
+        case .failure(let err):
+          await MainActor.run { result(err.toReadiumError().toFlutterError()) }
+        }
+      }
     case "goToLocator":
       Task.detached(priority: .high) {
         guard let args = call.arguments as? [Any?],
