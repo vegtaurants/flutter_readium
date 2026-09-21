@@ -161,6 +161,7 @@ fun Resource.injectScriptsAndStyles(
                 """<script type="text/javascript">
                 const isAndroid = true;
                 const isIos = false;
+                window.flutterReadiumImageZoom = ${ReadiumReader.imageZoomEnabled};
                 window.readiumTocIDs = ${jsonEncode(tocIds)};
             </script>
             $injectStyle

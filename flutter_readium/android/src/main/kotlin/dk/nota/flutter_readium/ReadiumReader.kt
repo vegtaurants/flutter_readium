@@ -100,6 +100,10 @@ object ReadiumReader :
     TimebasedNavigator.TimebasedListener,
     EpubNavigator.VisualListener,
     CoroutineScope by CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate) {
+    /** Image tap-to-zoom for img.zoomable; set by ReadiumReaderWidget from creationParams, read when resources are served. */
+    @Volatile
+    var imageZoomEnabled: Boolean = false
+
     private var appRef: WeakReference<Application>? = null
 
     private var timedBasedStateEventChannel: TimedBasedStateEventChannel? = null

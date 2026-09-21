@@ -26,6 +26,8 @@ public class EPUBReaderView: NSObject, FlutterPlatformView, ReadiumReaderView, E
   private var isJumpingToLocator = false
   private var lastHrefLocation: String?
   private var preferences: FlutterEPUBPreferences?
+  /// Image tap-to-zoom for img.zoomable; true iff the Flutter side wired an onImageTapped handler.
+  private let imageZoomEnabled: Bool
   private let publication: Publication
   private var lastViewport: NavigatorViewport?
 
@@ -59,6 +61,8 @@ public class EPUBReaderView: NSObject, FlutterPlatformView, ReadiumReaderView, E
 
     let preferencesMap = creationParams["preferences"] as? Dictionary<String, Any>?
     self.preferences = preferencesMap == nil ? FlutterEPUBPreferences.init() : FlutterEPUBPreferences.init(fromMap: preferencesMap!!)
+
+    self.imageZoomEnabled = creationParams["imageZoomEnabled"] as? Bool ?? false
 
     let locatorStr = creationParams["initialLocator"] as? String
     let locator = locatorStr == nil ? nil : try! Locator(legacyJSONString: locatorStr!)
@@ -620,6 +624,8 @@ public class EPUBReaderView: NSObject, FlutterPlatformView, ReadiumReaderView, E
     }
     /// Add simple script used by our JS to detect OS
     userScripts.append(WKUserScript(source: "const isAndroid=false,isIos=true;", injectionTime: .atDocumentStart, forMainFrameOnly: false))
+    /// Enable/disable image tap-to-zoom (img.zoomable) and its magnifier badge.
+    userScripts.append(WKUserScript(source: "window.flutterReadiumImageZoom = \(imageZoomEnabled ? "true" : "false");", injectionTime: .atDocumentStart, forMainFrameOnly: false))
 
     /// Add all known ToC IDs for this publication to a global javascript array.
     do {

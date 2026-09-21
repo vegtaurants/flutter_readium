@@ -275,6 +275,8 @@ class _ReadiumReaderWidgetState extends State<ReadiumReaderWidget> implements Re
       'initialLocator': widget.initialLocator == null ? null : json.encode(widget.initialLocator),
       'preloadPreviousPositionCount': widget.preloadPreviousPositionCount,
       'preloadNextPositionCount': widget.preloadNextPositionCount,
+      // Image tap-to-zoom (img.zoomable only) is enabled iff the app wired an onImageTapped handler.
+      'imageZoomEnabled': widget.onImageTapped != null,
       if (widget.selectionActions.isNotEmpty)
         'selectionActions': widget.selectionActions.map((a) => a.toJson()).toList(),
       if (widget.allowedDefaultActions != null)

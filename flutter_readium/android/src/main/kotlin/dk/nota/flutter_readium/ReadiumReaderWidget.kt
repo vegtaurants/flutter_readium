@@ -101,6 +101,7 @@ class ReadiumReaderWidget(
             creationParams["preferences"] as Map<String, String>?
         val publication = ReadiumReader.currentPublication
         val locatorString = creationParams["initialLocator"] as String?
+        ReadiumReader.imageZoomEnabled = creationParams["imageZoomEnabled"] as? Boolean ?: false
         val allowScreenReaderNavigation = creationParams["allowScreenReaderNavigation"] as Boolean?
         // Accepted for API parity with iOS but currently no-op: kotlin-toolkit's
         // EpubNavigatorFragment.Configuration does not expose preload-count fields
