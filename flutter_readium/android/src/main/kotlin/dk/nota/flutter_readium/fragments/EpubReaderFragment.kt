@@ -5,6 +5,7 @@ import android.view.ActionMode
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.webkit.JavascriptInterface
 import androidx.fragment.app.commitNow
 import androidx.lifecycle.lifecycleScope
 import dk.nota.flutter_readium.FlutterEpubPreferences
@@ -27,16 +28,37 @@ import org.readium.r2.navigator.epub.EpubNavigatorFragment
 import org.readium.r2.navigator.html.HtmlDecorationTemplates
 import org.readium.r2.navigator.util.DirectionalNavigationAdapter
 import org.readium.r2.navigator.input.InputListener
+import org.readium.r2.navigator.input.KeyEvent
 import org.readium.r2.navigator.input.TapEvent
 import org.readium.r2.shared.ExperimentalReadiumApi
 import org.readium.r2.shared.InternalReadiumApi
 import org.readium.r2.shared.publication.Layout
 import org.readium.r2.shared.publication.Locator
 import org.readium.r2.shared.util.AbsoluteUrl
+import java.util.concurrent.atomic.AtomicReference
 
 private const val TAG = "EpubReaderFragment"
 
 private var instanceNo = 0
+
+/** Name of the JavaScript interface used by helper line 2 (see assets/_helper_scripts/handwritten/). */
+private const val IMAGE_TAP_JS_INTERFACE = "FlutterReadiumImageTap"
+
+/**
+ * Synchronous hand-off of an image tap from the page to the tap listener (image tap-to-zoom, img.zoomable).
+ *
+ * Helper line 2 calls [mark] from its capture-phase click listener on EVERY click while zoom is enabled
+ * (the image src, or "" when the click is not on an img.zoomable). Readium's own bubble-phase click listener
+ * then calls Android.onTap for the same click, which reaches the input listener in [EpubReaderFragment],
+ * which consumes the value with getAndSet(null). JavaScript-interface calls block the page's JavaScript, so
+ * mark -> onTap for one click cannot be interleaved with another click: each tap sees only its own value.
+ */
+class FlutterReadiumImageTapBridge(private val pending: AtomicReference<String?>) {
+    @JavascriptInterface
+    fun mark(src: String?) {
+        pending.set(src?.takeIf { it.isNotBlank() })
+    }
+}
 
 @ExperimentalCoroutinesApi
 @OptIn(ExperimentalReadiumApi::class)
@@ -68,6 +90,9 @@ class EpubReaderFragment :
     }
 
     var listener: Listener? = null
+
+    /** The image tap marked by the current click, if any. See [FlutterReadiumImageTapBridge]. */
+    private val pendingImageTap = AtomicReference<String?>(null)
 
     val started = MutableStateFlow(false)
 
@@ -576,7 +601,11 @@ class EpubReaderFragment :
                             createSelectionActionModeCallback()
                         else
                             null,
-                    ),
+                    ).apply {
+                        // Image tap-to-zoom: synchronous per-click hand-off from helper line 2.
+                        val bridge = FlutterReadiumImageTapBridge(pendingImageTap)
+                        registerJavascriptInterface(IMAGE_TAP_JS_INTERFACE) { bridge }
+                    },
                 initialLocator = model.locator,
                 listener = this,
                 paginationListener = this,
@@ -599,20 +628,25 @@ class EpubReaderFragment :
         }
 
         (epubNavigator as OverflowableNavigator).apply {
-            // This will automatically turn pages when tapping the screen edges or arrow keys.
-            addInputListener(DirectionalNavigationAdapter(this))
+            // Turns pages when tapping the screen edges or pressing arrow keys (Readium defaults).
+            val edges = DirectionalNavigationAdapter(this)
+            // One listener decides exactly once per tap: a tap on an img.zoomable (marked synchronously by
+            // helper line 2 for this same click) opens the zoom viewer; every other tap takes the unchanged
+            // DirectionalNavigationAdapter path, synchronously, with its original return value.
             addInputListener(object : InputListener {
                 override fun onTap(event: TapEvent): Boolean {
-                    lifecycleScope.launch {
-                        val raw = evaluateJavascript("window.__rdmConsumeImageTap()")
-                        if (raw != null && raw != "null") {
-                            val unquoted = raw.trim().removeSurrounding("\"")
-                            val href = unquoted.removePrefix("https://readium_package/")
-                            if (href.isNotBlank()) listener?.onImageTapped(href)
+                    val src = pendingImageTap.getAndSet(null)
+                    if (ReadiumReader.imageZoomEnabled && src != null) {
+                        val href = src.removePrefix("https://readium_package/")
+                        if (href.isNotBlank()) {
+                            listener?.onImageTapped(href)
+                            return false
                         }
                     }
-                    return false
+                    return edges.onTap(event)
                 }
+
+                override fun onKey(event: KeyEvent): Boolean = edges.onKey(event)
             })
         }
 

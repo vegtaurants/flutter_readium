@@ -22,6 +22,9 @@ npm start
 npm run build
 ```
 
+> **Warning:** `assets/helpers/flutterReadiumTools.js` also carries hand-maintained lines 2 and 3, which a
+> webpack build (`clean: true`) deletes. Do not rebuild it blindly - see `handwritten/README.md`.
+
 ### Run unit tests
 
 ```bash
