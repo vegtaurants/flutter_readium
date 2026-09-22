@@ -132,3 +132,20 @@ table {
     }
   }
 }
+
+// AO - copying deterrence, NOT DRM. Ordinary text selection is disabled in EPUB content, so the native
+// selection menus (Copy, Select all, Translate, Share, Look Up) cannot open, and the iOS long-press callout
+// on links and images is suppressed. Normal taps and clicks (links, footnotes, img.zoomable, page edges) are
+// unchanged. Never add pointer-events here. Screenshots, OCR and extraction of the EPUB file are not prevented.
+* {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+
+// Form fields keep normal text selection and editing (user-select is inherited in Blink and WebKit).
+input,
+textarea {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+}

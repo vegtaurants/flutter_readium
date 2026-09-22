@@ -40,3 +40,21 @@ Before committing, prove:
   `DirectionalNavigationAdapter`.
 - iOS: `EPUBReaderView.swift` receives the `imageTapped` message and sets `window.flutterReadiumImageZoom` at
   document start.
+
+## Helper CSS (`assets/helpers/flutterReadiumTools.css`) - text-selection deterrence (AO)
+
+The helper CSS has **exactly two lines**: line 1 is `../src/NotaComicBookPage.scss` and line 2 is
+`../src/FlutterReadiumTools.scss`, each compiled with `sass` 1.99.0 `--style=compressed` (byte-identical to the webpack
+output). The end of `FlutterReadiumTools.scss` disables ordinary text selection in EPUB content (`input` and `textarea`
+stay selectable; no `contenteditable` exception; never add `pointer-events`). This is copying deterrence, not DRM.
+
+**Do not run webpack to refresh the CSS** (it also rewrites the helper JS and deletes lines 2 and 3). Regenerate only
+line 2:
+
+```bash
+npx sass@1.99.0 --style=compressed --no-source-map ../src/FlutterReadiumTools.scss > /tmp/line2.css
+# new line 2 = contents of /tmp/line2.css (trailing newline removed); line 1 is copied unchanged
+```
+
+Before committing, prove that compiling the previous `FlutterReadiumTools.scss` reproduces the previous line 2 exactly,
+that line 1 is unchanged, and that the file still has two lines ending in a newline.
